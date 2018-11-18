@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="margin-top:0px; margin-bottom:20px;">
+  
+  <!-- SELECTOR FOR LISTING FAMILIES -->
+  <select class="form-control" id="family_selector" style="margin-bottom:20px; margin-top:0px" onchange="familySelected(this)">
+    <!-- FAMILES GO HERE - POPULATED FROM AJAX CALL -->
+  </select>
+
+  <!-- BUTTON GROUP FOR LIST ITEM ACTIONS-->
+  <div class="text-left" style="margin-bottom:5px;">
+    <div class="btn-group" role="group" aria-label="Basic example">
+      <button type="button" style="margin: 1px" class="btn btn-primary" onclick="startItem()">start</button>
+      <button type="button" style="margin: 1px" class="btn btn-default" onclick="finishItem()">finish</button>
+      <button type="button" style="margin: 1px" class="btn btn-default" onclick="clearItem()">clear</button>
+      <button type="button" style="margin: 1px" class="btn btn-danger" onclick="deleteItem()">delete</button>
+    </div>
+  </div>
+
+  <!-- LIST ITEMS -->
+  
+  <div class="container" style="margin-top:60px; margin-bottom:20px;position:absolute;
+      top: 120px;
+      left:0px;
+      right:0px;
+      bottom:0px;
+      overflow-y:scroll;  ">
+
+      <div class="list-group" id="Items"
+        <!-- LIST ITEMS GO HERE - POPULATED FROM AJAX CALL-->
+      </div>
+
+
+  <!-- ADD NEW LIST ITEM CONTROLS -->
+  <div class="input-group" style="padding:0px;">
+    <input type="text" class="form-control" rows="1" id="newItem"></input>
+    <span class="input-group-btn">
+      <button type="button" id="addButton" onclick="addItem()" class="btn btn-primary">add item</button>
+    </span>
+  </div>
+    </div>
+
+</div>
+
+
+<!-- TODO: MOVE TO STATIC JAVASCRIPT DIR -->
+<script type="text/javascript">
+  var currentFamilyObject = {}
+  var currentUser = {}
+  var currentSelectedListItem = {}
+
+  // CALLED WHEN WINDOW LOADS - GET TOKEN AND GET CURRENT USER JWT
+  $(window).on('load', function() {
+
+    var cookie = getCookie("Authorization")
+    if (cookie) {
+      currentUser = parseJwt(getCookie("Authorization"))
+      console.log(currentUser)
+      $('#navbar-title').replaceWith('<a class="navbar-brand" href="#" id="navbar-title">' + currentUser.name + '</a>')
+      getFamilies(currentUser)
+    }
+  });
+
+  // CALLED WHEN FAMILY DROPDOWN ITEM IS SELECTED
+  function familySelected(obj) {
+    currentFamilyObject = JSON.parse(atob(obj.value))
+    console.log(currentFamilyObject.public_id)
+    loadItems(currentFamilyObject.public_id)
+  }
+
+  // CALLED AN ITEM IN THE GROCERY LIST CLICKED ON 
+  function itemClicked(item) {
+    
+    currentSelectedListItem = JSON.parse(atob($(item).attr('data-value')))
+    console.log(currentSelectedListItem)
+    $(item).addClass('active').siblings().removeClass('active');
+  }
+
+  // CALLED WHEN START BUTTON IS CLICKED
+  function startItem() {
+    console.log("start")
+    currentSelectedListItem.status = "started";
+    updateItem(currentSelectedListItem)
+  }
+
+  // CALLED WHEN FINISH BUTTON IS CLICKED
+  function finishItem() {
+    console.log("finish")
+    currentSelectedListItem.status = "done";
+    updateItem(currentSelectedListItem)
+  }
+
+  // CALLED WHEN FINISH BUTTON IS CLICKED
+  function clearItem() {
+    console.log("clear")
+    currentSelectedListItem.status = "created";
+    updateItem(currentSelectedListItem)
+  }
+
+  // CALLED WHEN DELETE BUTTON IS CLICKED
+  function deleteItem() {
+    console.log("delete")
+    deleteItemOnServer(currentSelectedListItem.public_id)
+  }
+
+  // CALLED WHEN ADD ITEM BUTTON IS CLICKED
+  function addItem() {
+    newItemText = $('#newItem').val();
+
+    if (newItemText != '') {
+      uploadNewItem(newItemText, currentFamilyObject.default_list_id)
+      document.getElementById('newItem').value = ""
+    }
+
+  }
+
+
+  // CALLED FROM DELETE BUTTON HANDLER
+  function deleteItemOnServer(item_id) {
+
+    $.ajax({
+      type: "DELETE",
+      url: "/item/" + item_id
+    }).done(function(data) {
+      loadItems(currentFamilyObject.public_id);
+    }).fail(function(error) {
+      console.log(error.responseText);
+    });
+  }
+
+  // CALLED FROM START AND FINISH BUTTON HANDLER
+  function updateItem(item) {
+    console.log(item)
+    $.ajax({
+      type: "PUT",
+      url: "/item/" + item.public_id,
+      data: JSON.stringify(item),
+      contentType: 'application/json;charset=UTF-8',
+    }).done(function(data) {
+      loadItems(currentFamilyObject.public_id)
+    }).fail(function(error) {
+      console.log(error.responseText);
+    });
+  }
+
+  // CALLED FROM ADD ITEM HANDLER
+  function uploadNewItem(newItemText, list_id) {
+    item = {
+      list_id: list_id,
+      desc: newItemText,
+      status: "created"
+    }
+    $.ajax({
+      type: "POST",
+      url: "/item/",
+      data: JSON.stringify(item),
+      contentType: 'application/json;charset=UTF-8',
+    }).done(function(data) {
+      loadItems(currentFamilyObject.public_id)
+    }).fail(function(error) {
+      console.log(error.responseText);
+    });
+  }
+
+  // CALLED FROM FAMILY SELECTOR HANDLER
+  function loadItems(familyId) {
+    $('#Items').empty();
+    $.ajax({
+      type: "GET",
+      url: "/family/" + familyId + "/listItems",
+      dataType: "json",
+      success: function(result) {
+        console.log(result)
+        $.each(result.data, function(i) {
+          var listItem = result.data[i]
+          var classFor = "'list-group-item list-group-item-default'" 
+          if (listItem.status == "started")            
+            classFor = "'list-group-item list-group-item-warning'"  
+          if (listItem.status == "done")
+            classFor = "'list-group-item list-group-item-success'"          
+          
+        //    $('#Items').append("<li class=" + classFor + " onclick='itemClicked(this)' value='" +"' + ">"  + listItem.desc+"</li>");
+        $('#Items').append("<li style='width:100%;' data-value=" + btoa(JSON.stringify(listItem)) + " onclick='itemClicked(this)' class=" + classFor + ">" + listItem.desc + "</button>");
+        })
+      }
+    });
+  }
+
+  // CALLED FROM PAGE LOAD HANDLER
+  function getFamilies(user) {
+
+    $.ajax({
+      type: "GET",
+      url: "/user/" + user.public_id + "/families",
+      dataType: "json",
+      success: function(result) {
+        $.each(result.data, function(i) {
+          currentFamilyObject = result.data[0]
+          var membership = result.data[i]
+          var div_data = "<option value=" + btoa(JSON.stringify(membership)) + ">" + membership.name + "</option>";
+          $(div_data).appendTo('#family_selector');
+        })
+        console.log(currentFamilyObject.public_id)
+        loadItems(currentFamilyObject.public_id);
+      }
+    });
+  };
+</script>
+{% endblock %}

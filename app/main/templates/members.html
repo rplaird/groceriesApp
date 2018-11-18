@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+  <form>
+
+    <label style="margin-top: 10px" for="family_selector">Select a Family</label>
+    <select class="form-control" id="family_selector" onchange="familySelected(this)">
+      <!-- POPULATED FROM AJAX -->
+    </select>
+    <button type="button" onclick="joinFamily()" style="margin-top: 10px" id="addButton" class="btn btn-primary ">Join</button>
+  </form>
+</div>
+
+<!-- TODO: MOVE TO STATIC DIR -->
+
+<script type="text/javascript">
+  var currentFamilyObject = {}
+  var currentUser ={}
+
+  $(window).on('load', function() {
+    currentUser = parseJwt(getCookie("Authorization"))
+    getAllFamilies();
+  });
+
+  function joinFamily() {
+    uploadMember(currentUser.public_id, currentFamilyObject.public_id)
+  }
+
+
+  function familySelected(obj) {
+    currentFamilyObject = JSON.parse(atob(obj.value))
+    console.log(currentFamilyObject)
+  }
+
+  function uploadMember(user, family) {
+    item = {
+      user_id: user,
+      family_id: family
+    }
+    $.ajax({
+      type: "POST",
+      url: "/member/",
+      data: JSON.stringify(item),
+      contentType: 'application/json;charset=UTF-8',
+    }).done(function(data) {
+      $('#messages').addClass('alert alert-sucess').text("welcome to the " + currentFamilyObject.name +" family!");
+    }).fail(function(error) {
+      console.log(error.responseText);
+        $('#messages').addClass('alert alert-danger').text(error.responseText);
+    });
+  }  
+
+  function getAllFamilies() {
+
+    $.ajax({
+      type: "GET",
+      url: "/family/",
+      dataType: "json",
+      success: function(result) {
+        $.each(result.data, function(i) {
+          var family = result.data[i]
+          var div_data = "<option value=" + btoa(JSON.stringify(family)) + ">" + family.name + "</option>";
+          $(div_data).appendTo('#family_selector');
+        })
+      }
+    });
+  };
+</script>
+{% endblock %}

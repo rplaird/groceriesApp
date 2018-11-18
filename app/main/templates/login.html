@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <div class="container">
+    <div class="modal fade" id="myModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="form" role="form">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Exit</span></button>
+              <h4 class="modal-title">Login</h4>
+            </div>
+            <div class="modal-body">
+              <div id="messages"></div>
+              <input type="email" name="email" placeholder="Email" required class="form-control input-lg" />
+              <input type="password" class="form-control input-lg" name="password" placeholder="Password" required="" />
+            </div>
+            <div class="modal-footer">
+              <button type="submit" name="go" class="btn btn-lg btn-primary btn-block">Sign in</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script type="text/javascript">
+    $(window).on('load', function() {
+      $('#myModal').modal('show');
+      $('#myModal').modal({
+        backdrop: 'static',
+        keyboard: false
+      });
+    });
+
+    $('#form').submit(function(e) {
+
+      var creds = {
+        'email': $("input[name=email]").val(),
+        'password': $("input[name=password]").val()
+      };
+
+      $.ajax({
+        type: "POST",
+        url: "/auth/login",
+        data: JSON.stringify(creds),
+        contentType: 'application/json;charset=UTF-8',
+      }).done(function(data) {
+        setCookie("Authorization", data.Authorization, 1)
+        $('#messages').addClass('alert alert-success').text("success");
+        window.location.href = '/home'; //relative to home
+      }).fail(function(error) {
+        console.log(error.responseText);
+        $('#messages').addClass('alert alert-danger').text(error.responseJSON.message);
+        console.log(getCookie("Authorization"));
+      });
+
+      e.preventDefault();
+
+    });
+  
+  </script>
+{% endblock %}
