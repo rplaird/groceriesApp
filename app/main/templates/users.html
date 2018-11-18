@@ -2,66 +2,68 @@
 
 {% block content %}
 
-  <div class="container">
-    <div class="modal fade" id="myModal">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <form id="form" role="form">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Exit</span></button>
-              <h4 class="modal-title">create an account</h4>
-            </div>
-            <div class="modal-body">
-              <div id="messages"></div>
-              <input type="email" name="email" placeholder="Email" required class="form-control input-lg" />
-              <input type="text" name="username" placeholder="username" required class="form-control input-lg" />
-              <input type="password" class="form-control input-lg" name="password" placeholder="Password" required="" />
-            </div>
-            <div class="modal-footer">
-              <button type="submit" name="go" class="btn btn-lg btn-primary btn-block">Sign in</button>
-            </div>
-          </form>
-        </div>
+<div class="container">
+  <div class="modal fade" id="myModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="form" role="form">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Exit</span></button>
+            <h4 class="modal-title">create an account</h4>
+          </div>
+          <div class="modal-body">
+            <div id="messages"></div>
+            <input type="email" name="email" placeholder="Email" required class="form-control input-lg" />
+            <input type="text" name="username" placeholder="username" required class="form-control input-lg" />
+            <input type="password" class="form-control input-lg" name="password" placeholder="Password" required="" />
+          </div>
+          <div class="modal-footer">
+            <button type="submit" name="go" class="btn btn-lg btn-primary btn-block">Sign in</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
+</div>
 
 
-  <script type="text/javascript">
-    $(window).on('load', function() {
-      $('#myModal').modal('show');
-      $('#myModal').modal({
-        backdrop: 'static',
-        keyboard: false
-      });
+<script type="text/javascript">
+  $(window).on('load', function() {
+    $('#myModal').modal('show');
+    $('#myModal').modal({
+      backdrop: 'static',
+      keyboard: false
     });
 
-    $('#form').submit(function(e) {
+    // SETS and RETURNS 'currentUser' var in BASE.
+    getCurrentUser();
+  });
 
-      var user = {
-        'email': $("input[name=email]").val(),
-        'password': $("input[name=password]").val(),
-        'username': $("input[name=username]").val()
-        
-      };
+  $('#form').submit(function(e) {
 
-      $.ajax({
-        type: "POST",
-        url: "/user/",
-        data: JSON.stringify(user),
-        contentType: 'application/json;charset=UTF-8',
-      }).done(function(data) {
-        $('#messages').addClass('alert alert-success').text("success");
-        window.location.href = '/login'; //relative to home
-      }).fail(function(error) {
+    var user = {
+      'email': $("input[name=email]").val(),
+      'password': $("input[name=password]").val(),
+      'username': $("input[name=username]").val()
 
-        $('#messages').addClass('alert alert-danger').text(error.responseJSON.message);
+    };
 
-      });
+    $.ajax({
+      type: "POST",
+      url: "/user/",
+      data: JSON.stringify(user),
+      contentType: 'application/json;charset=UTF-8',
+    }).done(function(data) {
+      showAlert("alert-success", "successfully created", true)
+      window.location.href = '/login'; //relative to home
+    }).fail(function(error) {
+      showAlert("alert-danger", error.responseJSON.message, true)
 
-      e.preventDefault();
 
     });
-  
-  </script>
+
+    e.preventDefault();
+
+  });
+</script>
 {% endblock %}
