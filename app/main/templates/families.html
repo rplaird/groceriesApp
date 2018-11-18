@@ -31,6 +31,9 @@
       backdrop: 'static',
       keyboard: false
     });
+
+    // SETS and RETURNS 'currentUser' var in BASE.
+    getCurrentUser();
   });
 
   $('#form').submit(function(e) {
@@ -45,10 +48,10 @@
       data: JSON.stringify(family),
       contentType: 'application/json;charset=UTF-8',
     }).done(function(data) {
-      $('#messages').addClass('alert alert-success').text("success");
+      showAlert("alert-success", family.name + " created",true) 
     }).fail(function(error) {
       console.log(error.responseText);
-      $('#messages').addClass('alert alert-danger').text(error.responseJSON.message);
+      showAlert("alert-danger", error.responseJSON.message,true) 
     });
 
     e.preventDefault();

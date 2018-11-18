@@ -26,13 +26,18 @@
   </div>
 
 
-  <script type="text/javascript">
+
+  <script type="text/javascript">      
     $(window).on('load', function() {
       $('#myModal').modal('show');
       $('#myModal').modal({
         backdrop: 'static',
         keyboard: false
       });
+      
+      // SETS and RETURNS 'currentUser' var in BASE.
+      getCurrentUser();
+    
     });
 
     $('#form').submit(function(e) {
@@ -49,11 +54,11 @@
         contentType: 'application/json;charset=UTF-8',
       }).done(function(data) {
         setCookie("Authorization", data.Authorization, 1)
-        $('#messages').addClass('alert alert-success').text("success");
+        showAlert("alert-success", "successfully logged in",true)  
         window.location.href = '/home'; //relative to home
       }).fail(function(error) {
         console.log(error.responseText);
-        $('#messages').addClass('alert alert-danger').text(error.responseJSON.message);
+        showAlert("alert-danger", error.responseJSON.message,true)  
         console.log(getCookie("Authorization"));
       });
 

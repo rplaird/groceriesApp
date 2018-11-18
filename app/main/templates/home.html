@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="container" style="margin-top:0px; margin-bottom:20px;">
-  
+
   <!-- SELECTOR FOR LISTING FAMILIES -->
   <select class="form-control" id="family_selector" style="margin-bottom:20px; margin-top:0px" onchange="familySelected(this)">
     <!-- FAMILES GO HERE - POPULATED FROM AJAX CALL -->
@@ -20,7 +20,7 @@
   </div>
 
   <!-- LIST ITEMS -->
-  
+
   <div class="container" style="margin-top:60px; margin-bottom:20px;position:absolute;
       top: 120px;
       left:0px;
@@ -28,19 +28,18 @@
       bottom:0px;
       overflow-y:scroll;  ">
 
-      <div class="list-group" id="Items"
-        <!-- LIST ITEMS GO HERE - POPULATED FROM AJAX CALL-->
-      </div>
-
-
-  <!-- ADD NEW LIST ITEM CONTROLS -->
-  <div class="input-group" style="padding:0px;">
-    <input type="text" class="form-control" rows="1" id="newItem"></input>
-    <span class="input-group-btn">
-      <button type="button" id="addButton" onclick="addItem()" class="btn btn-primary">add item</button>
-    </span>
-  </div>
+    <div class="list-group" id="Items" <!-- LIST ITEMS GO HERE - POPULATED FROM AJAX CALL-->
     </div>
+    <div id="messages"></div>
+
+    <!-- ADD NEW LIST ITEM CONTROLS -->
+    <div class="input-group" style="padding:0px;">
+      <input type="text" class="form-control" rows="1" id="newItem"></input>
+      <span class="input-group-btn">
+        <button type="button" id="addButton" onclick="addItem()" class="btn btn-primary">add item</button>
+      </span>
+    </div>
+  </div>
 
 </div>
 
@@ -48,17 +47,13 @@
 <!-- TODO: MOVE TO STATIC JAVASCRIPT DIR -->
 <script type="text/javascript">
   var currentFamilyObject = {}
-  var currentUser = {}
   var currentSelectedListItem = {}
 
   // CALLED WHEN WINDOW LOADS - GET TOKEN AND GET CURRENT USER JWT
   $(window).on('load', function() {
-
-    var cookie = getCookie("Authorization")
-    if (cookie) {
-      currentUser = parseJwt(getCookie("Authorization"))
-      console.log(currentUser)
-      $('#navbar-title').replaceWith('<a class="navbar-brand" href="#" id="navbar-title">' + currentUser.name + '</a>')
+    
+    // DEFINED IN BASE . FETCHES COOKIE
+    if (getCurrentUser()) {
       getFamilies(currentUser)
     }
   });
@@ -72,7 +67,7 @@
 
   // CALLED AN ITEM IN THE GROCERY LIST CLICKED ON 
   function itemClicked(item) {
-    
+
     currentSelectedListItem = JSON.parse(atob($(item).attr('data-value')))
     console.log(currentSelectedListItem)
     $(item).addClass('active').siblings().removeClass('active');
@@ -160,7 +155,8 @@
     }).done(function(data) {
       loadItems(currentFamilyObject.public_id)
     }).fail(function(error) {
-      console.log(error.responseText);
+      console.log(error.responseJSON);
+        showAlert("alert-danger", error.responseJSON.message,true)  
     });
   }
 
@@ -175,14 +171,14 @@
         console.log(result)
         $.each(result.data, function(i) {
           var listItem = result.data[i]
-          var classFor = "'list-group-item list-group-item-default'" 
-          if (listItem.status == "started")            
-            classFor = "'list-group-item list-group-item-warning'"  
+          var classFor = "'list-group-item list-group-item-default'"
+          if (listItem.status == "started")
+            classFor = "'list-group-item list-group-item-warning'"
           if (listItem.status == "done")
-            classFor = "'list-group-item list-group-item-success'"          
-          
-        //    $('#Items').append("<li class=" + classFor + " onclick='itemClicked(this)' value='" +"' + ">"  + listItem.desc+"</li>");
-        $('#Items').append("<li style='width:100%;' data-value=" + btoa(JSON.stringify(listItem)) + " onclick='itemClicked(this)' class=" + classFor + ">" + listItem.desc + "</button>");
+            classFor = "'list-group-item list-group-item-success'"
+
+          //    $('#Items').append("<li class=" + classFor + " onclick='itemClicked(this)' value='" +"' + ">"  + listItem.desc+"</li>");
+          $('#Items').append("<li style='width:100%;' data-value=" + btoa(JSON.stringify(listItem)) + " onclick='itemClicked(this)' class=" + classFor + ">" + listItem.desc + "</button>");
         })
       }
     });
@@ -196,6 +192,10 @@
       url: "/user/" + user.public_id + "/families",
       dataType: "json",
       success: function(result) {
+        
+        if(!result.data.length){
+        showAlert("alert-danger", "you have no families. \n create one, or join an existing one!",true)          
+        }
         $.each(result.data, function(i) {
           currentFamilyObject = result.data[0]
           var membership = result.data[i]

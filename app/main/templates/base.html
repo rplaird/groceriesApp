@@ -12,19 +12,19 @@
 
 <body>
 
-  <div class="container" style="padding-top:10px; padding-bottom:0px;">   
-    
+  <div class="container" style="padding-top:10px; padding-bottom:0px;">
+
     <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <a class="navbar-brand" href="#" id="navbar-title">Title</a>
-          
+
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
@@ -40,13 +40,46 @@
         </div>
       </div>
     </nav>
-  
+
+    <div id="alert_placeholder"></div>
+
   </div>
 
   {% block content %}
   {% endblock %}
 
   <script type="text/javascript">
+    var currentUser = {}
+
+    function showAlert(type, message, dialog) {
+      var div = "<div class='alert " + type + " fade in'> " +
+        '<a href="#" class="close" data-dismiss="alert">&times;</a> ' +
+        message +
+        "</div>"
+
+      if (dialog) {
+        $('#messages').append(div)
+      } else {
+
+        $('#alert_placeholder').append(div)
+      }
+    }
+
+    function getCurrentUser() {
+      var title = "No Session"
+      var cookie = getCookie("Authorization")
+      if (cookie) {
+        currentUser = parseJwt(getCookie("Authorization"))
+        var title = "No Session"
+        if (currentUser) {
+          title = currentUser.name
+        }
+      }
+
+      $('#navbar-title').replaceWith('<a class="navbar-brand" href="#" id="navbar-title">' + title + '</a>')
+      return currentUser
+    }
+
     function signOut() {
       deleteCookie("Authorization")
       window.location.href = '/login';

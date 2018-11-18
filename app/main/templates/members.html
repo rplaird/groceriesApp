@@ -6,7 +6,7 @@
 
   <form>
 
-    <label style="margin-top: 10px" for="family_selector">Select a Family</label>
+    <label style="margin-top: 10px" for="family_selector">Join a Family</label>
     <select class="form-control" id="family_selector" onchange="familySelected(this)">
       <!-- POPULATED FROM AJAX -->
     </select>
@@ -18,15 +18,18 @@
 
 <script type="text/javascript">
   var currentFamilyObject = {}
-  var currentUser ={}
+
+  
+  // CALLED WHEN WINDOW LOADS - GET TOKEN AND GET CURRENT USER JWT
 
   $(window).on('load', function() {
-    currentUser = parseJwt(getCookie("Authorization"))
+    // SETS and RETURNS 'currentUser' var in BASE.
+    getCurrentUser();  
     getAllFamilies();
   });
 
   function joinFamily() {
-    uploadMember(currentUser.public_id, currentFamilyObject.public_id)
+    uploadMember(currentUser.public_id, currentFamilyObject.public_id, currentFamilyObject.name)
   }
 
 
@@ -35,21 +38,22 @@
     console.log(currentFamilyObject)
   }
 
-  function uploadMember(user, family) {
+  function uploadMember(user, family_id, familyName) {
     item = {
       user_id: user,
-      family_id: family
+      family_id: family_id
     }
     $.ajax({
       type: "POST",
       url: "/member/",
       data: JSON.stringify(item),
       contentType: 'application/json;charset=UTF-8',
-    }).done(function(data) {
-      $('#messages').addClass('alert alert-sucess').text("welcome to the " + currentFamilyObject.name +" family!");
+    }).done(function(data) {      
+      showAlert("alert-success", "Welcome to the " + familyName + " family!")          
+      
     }).fail(function(error) {
       console.log(error.responseText);
-        $('#messages').addClass('alert alert-danger').text(error.responseText);
+        showAlert("alert-warning", "You are already a member of the  " + familyName + " family!") 
     });
   }  
 
@@ -61,6 +65,7 @@
       dataType: "json",
       success: function(result) {
         $.each(result.data, function(i) {
+          currentFamilyObject = result.data[0]
           var family = result.data[i]
           var div_data = "<option value=" + btoa(JSON.stringify(family)) + ">" + family.name + "</option>";
           $(div_data).appendTo('#family_selector');
