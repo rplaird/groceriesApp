@@ -29,26 +29,28 @@ http://35.183.2.50:5000/users
 [Flask-SQLAlchemy](http://flask-sqlalchemy.pocoo.org/2.3/) database ORM
 [Flask-restplus](https://flask-restplus.readthedocs.io/en/stable/) Rest API
 
-
-
 ## API routes and models ( swagger UI )
 
 http://35.183.2.50:5000/
 
 ## First time setup
-
 ```bash
-
 # >  /groceriesApp/app/pip3 install -r requirements.txt
 
 # > /groceriesApp/python3 manage.py db init
 # > /groceriesApp/python3 manage.py db migrate
 # > /groceriesApp/python3 manage.py db upgrade
-
 ```
 
 ## Running the app
-
 ```bash
 # > /groceriesApp/python3 manage.py run
+```
+
+##Todos
+
+Management UI for Users, Families, and Memberships
+Better UI in general
+Real-time notifications when a list is modified by another family member
+
 
